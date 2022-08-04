@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+  openai_spinningup_rl_env: 
+    # Define the basis to start. 
+    build: . 
+    # image: jupyter/datascience-notebook:latest 
+
+    # By specifying this container name, you can customize the name of container, but you only can make one instance of that name. 
+    # A duplicated execusion of compose.yml will receive errors since the name of containner has already been used.
+    # container_name: spinningup_env   
+
+    # Specify the network mode, "bridge", "host", "none", "service:[service name]", "container:[container name/id]", 
+    # network_mode: "host"
+    # Specify ports to be exposed to host, [Port inside container]:[Port on host machine]
+    # ports: 
+    #   - 23380:80 
+    #   - 23880:8080 
+    #   - 23888:8088 
+    #   - 23433:433 
+
+    # ENV variables inside container. 
+    environment: 
+      # Default DISPLAY should goes to Docker HOST, which can be find inside containner using "host.docker.internal",
+      # or you can define it by yourself in .env file.
+      DISPLAY: ${DOCKER_HOST_IP:-host.docker.internal}:0.0 
+      # JUPYTER_ENABLE_LAB: "yes" 
+      # JUPYTER_TOKEN: "123456"  # initial jupyter token 
+
+    # Volumes mounted from host to container.
+    volumes: 
+      - ..:/workspace  # Give the container the directory of the whole project. (CAUTION, This may do harm to the host file system)
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw  # For display.
+    deploy: 
+      resources: 
+        reservations: 
+          devices: 
+            - driver: nvidia 
+              # count: 1 
+              capabilities: [gpu] 
+          memory: 12G 
+    command: tail -f /dev/null   # keep shell interactive
+
+
+# ORIG docker command: docker run -ti --rm  -e DISPLAY=172.28.240.1:0.0 -v /tmp/.X11-unix:/tmp/.X11-unix:rw my_mujoco_env
+# To start a new session(terminal) from existing running container: docker exec -it spinningup_env bash
