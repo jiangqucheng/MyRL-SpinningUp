@@ -3,8 +3,8 @@
 FROM pytorch/pytorch:1.11.0-cuda11.3-cudnn8-devel
 # FROM nvcr.io/nvidia/pytorch:22.05-py3
 
-## Select user.
-USER root
+# build arg: user
+ARG user=test
 
 
 ## Update & install required packages.
@@ -18,6 +18,21 @@ RUN apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/r
     && rm -r /var/lib/apt/lists/* 
 
 
+# add user: give sudo permit, set the passwd.
+RUN useradd --create-home --no-log-init --shell /bin/bash ${user} \
+    && adduser ${user} sudo \
+    && echo "${user}:1" | chpasswd
+# change user's UID and GID
+# RUN usermod -u 1000 ${user} && usermod -G 1000 ${user}
+
+## Create and goto workspace.
+VOLUME /workspace
+WORKDIR /workspace
+RUN chmod -R 777 /workspace
+
+## Select user.
+USER ${user}
+
 ## Other apt packages related to OpenGL.
 # apt-get install -y freeglut3-dev libglu1-mesa-dev libsoil-dev libglm-dev libassimp-dev libglew-dev libglfw3-dev libxinerama-dev libxcursor-dev libxi-dev libfreetype6-dev x11-apps mesa-utils
 
@@ -29,28 +44,25 @@ RUN apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/r
 # 可以直接在 config.xlaunch 中设置 XDMCPIndirect="False"，并重启服务！（确认原服务结束运行并使用更新后的配置重启实例！）
 
 ## add env exports
-ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/lib/nvidia:~/.mujoco/mujoco210/bin:/root/.mujoco/mujoco210/bin
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/lib/nvidia:/home/${user}/.mujoco/mujoco210/bin:/root/.mujoco/mujoco210/bin
 ENV LANG C.UTF-8
 ENV MESA_GL_VERSION_OVERRIDE 3.3
 
-## Create and goto workspace.
-VOLUME /workspace
-WORKDIR /workspace
-
 ## Add initialize script to container.
 # ADD http://abcd.com/efgh.txt .
-COPY ./setup_mujoco.py /root/setup_mujoco.py
+COPY ./setup_mujoco.py /workspace/setup_mujoco.py
 
-## Download mujoco and set up in env.
+# Download mujoco and set up in env.
 RUN mkdir -p ~/.mujoco \
-    && wget https://mujoco.org/download/mujoco210-linux-x86_64.tar.gz -O mujoco.tar.gz \
-    && tar -xf mujoco.tar.gz -C ~/.mujoco \
-    && rm mujoco.tar.gz \
+    && wget https://mujoco.org/download/mujoco210-linux-x86_64.tar.gz -O ~/mujoco.tar.gz \
+    && tar -xf ~/mujoco.tar.gz -C ~/.mujoco \
+    && rm ~/mujoco.tar.gz \
 	&& echo "" >> ~/.bashrc \
 	&& echo "# MUJOCO Settings." >> ~/.bashrc \
-	&& echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/lib/nvidia:~/.mujoco/mujoco210/bin" >> ~/.bashrc \
+	&& echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/lib/nvidia:/home/${user}/.mujoco/mujoco210/bin" >> ~/.bashrc \
 	&& pip3 install --no-cache-dir 'mujoco-py<2.2,>=2.1' \
-	&& python3 ~/setup_mujoco.py && rm ~/setup_mujoco.py \
+	&& python3 /workspace/setup_mujoco.py \
+	&& rm /workspace/setup_mujoco.py \
 	&& unset LIBGL_ALWAYS_INDIRECT
 
 # Download OpenAI/SpinningUp and set up in env. 

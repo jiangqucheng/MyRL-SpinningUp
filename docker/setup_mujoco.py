@@ -1,11 +1,12 @@
 from datetime import datetime
+import os
 
 TIME_STR_STYLE = "%H%M%S"
 
 def get_time_str():
     return datetime.now().strftime(TIME_STR_STYLE)
 
-file_handle = open(f"/workspace/Event_{get_time_str()}.txt", "w+")
+file_handle = open(f"{os.path.basename(__file__).upper()}_Event_{get_time_str()}.txt", "w+")
 
 try:
 	import mujoco_py

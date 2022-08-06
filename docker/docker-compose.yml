@@ -4,6 +4,7 @@ services:
   openai_spinningup_rl_env: 
     # Define the basis to start. 
     build: . 
+    privileged: true
     # image: jupyter/datascience-notebook:latest 
 
     # By specifying this container name, you can customize the name of container, but you only can make one instance of that name. 
