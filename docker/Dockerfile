@@ -11,7 +11,7 @@ ARG user=test
 RUN apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/3bf863cc.pub \
 	&& apt-get update \
 	&& apt-get upgrade -y \
-	&& apt-get install -y wget gcc g++ python3.8 python3-pip git net-tools inetutils-ping \
+	&& apt-get install -y sudo wget gcc g++ python3.8 python3-pip git net-tools inetutils-ping \
 	&& apt-get install -y libosmesa6-dev patchelf libgl1-mesa-dev swig xterm dbus-x11 python-opengl\
 	&& apt-get install -y libopenmpi-dev \
     && apt-get clean all  \

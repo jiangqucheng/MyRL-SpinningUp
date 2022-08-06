@@ -30,6 +30,7 @@ services:
 
     # Volumes mounted from host to container.
     volumes: 
+      # If the user account in container is not permitted to modify the workspace, chmod -R 777 /workspace first before using it.
       - ..:/workspace  # Give the container the directory of the whole project. (CAUTION, This may do harm to the host file system)
       - /tmp/.X11-unix:/tmp/.X11-unix:rw  # For display.
     deploy: 
